@@ -12,6 +12,8 @@ cron.schedule('*/1 * * * *', async () => {
 
   const matches = await getLiveMatches();
 
+  console.log("Quantidade de jogos:", matches.length);
+
   for (let match of matches) {
     const result = checkRules(match);
 
