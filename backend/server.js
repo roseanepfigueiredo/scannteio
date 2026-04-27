@@ -42,6 +42,4 @@ cron.schedule('*/1 * * * *', async () => {
 });
 
 console.log("Servidor rodando...");
-const { sendAlert } = require('./services/notifier');
-
 sendAlert("🚨 TESTE DO SERVIDOR ONLINE FUNCIONANDO!");
