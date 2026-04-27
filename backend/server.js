@@ -42,4 +42,3 @@ cron.schedule('*/1 * * * *', async () => {
 });
 
 console.log("Servidor rodando...");
-sendAlert("🚨 TESTE DO SERVIDOR ONLINE FUNCIONANDO!");
