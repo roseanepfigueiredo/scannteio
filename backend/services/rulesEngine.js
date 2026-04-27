@@ -1,7 +1,10 @@
 function checkRules(match) {
   try {
     const e = match.fixture.status.elapsed;
-    if (!match.statistics || e === null) return { triggered: false };
+
+    if (!match.statistics || e === null) {
+      return { triggered: false };
+    }
 
     const h = match.statistics[0].statistics;
     const a = match.statistics[1].statistics;
@@ -16,9 +19,23 @@ function checkRules(match) {
     const dangerous = g(h,"Dangerous Attacks") + g(a,"Dangerous Attacks");
     const attacks = g(h,"Attacks") + g(a,"Attacks");
 
-    const apm = dangerous / e;
+    const apm = e > 0 ? dangerous / e : 0;
     const pressure = attacks > 0 ? (dangerous / attacks) * 100 : 0;
 
+    // 🔥 MODO TESTE (FACIL DE DISPARAR)
+    if (e >= 5 && shots >= 1) {
+      return {
+        triggered: true,
+        half: "TESTE",
+        pressure,
+        apm,
+        corners,
+        shots,
+        level: "TESTE"
+      };
+    }
+
+    // 🔵 REGRAS REAIS (mantidas)
     let level = "NORMAL";
 
     if (pressure >= 70 && apm >= 1) {
@@ -35,7 +52,8 @@ function checkRules(match) {
 
     return { triggered: false };
 
-  } catch {
+  } catch (err) {
+    console.log("Erro nas regras:", err.message);
     return { triggered: false };
   }
 }
