@@ -1,5 +1,4 @@
 require('dotenv').config();
-console.log("VERSAO NOVA 2.0");
 const cron = require('node-cron');
 
 const { getLiveMatches } = require('./services/apiFootball');
@@ -15,7 +14,6 @@ cron.schedule('*/1 * * * *', async () => {
 
 try {
   matches = await getLiveMatches();
-  console.log("Quantidade de jogos:", matches.length);
 } catch (err) {
   console.log("ERRO NA API:", err.message);
 }
