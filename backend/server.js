@@ -1,4 +1,5 @@
 require('dotenv').config();
+console.log("VERSAO NOVA 2.0");
 const cron = require('node-cron');
 
 const { getLiveMatches } = require('./services/apiFootball');
