@@ -1,50 +1,57 @@
 require('dotenv').config();
 const cron = require('node-cron');
 
-const { getLiveMatches } = require('./services/apiFootball');
+const { getLiveMatches, getMatchStatistics } = require('./services/apiFootball');
 const { checkRules } = require('./services/rulesEngine');
 const { sendAlert } = require('./services/notifier');
 
 const sentAlerts = new Set();
 
+console.log("Servidor rodando...");
+
 cron.schedule('*/1 * * * *', async () => {
   console.log("Verificando jogos...");
 
-  let matches = [];
+  try {
+    const matches = await getLiveMatches();
 
-try {
-  matches = await getLiveMatches();
-} catch (err) {
-  console.log("ERRO NA API:", err.message);
-}
+    for (let match of matches) {
+      try {
+        const stats = await getMatchStatistics(match.fixture.id);
+        match.statistics = stats;
 
-  for (let match of matches) {
-    const result = checkRules(match);
+        const result = checkRules(match);
 
-    if (!result.triggered) continue;
+        if (!result.triggered) continue;
 
-    const key = `${match.fixture.id}-${result.half}`;
+        const key = `${match.fixture.id}-${result.half}-${result.level}`;
 
-    if (!sentAlerts.has(key)) {
-      sentAlerts.add(key);
+        if (!sentAlerts.has(key)) {
+          sentAlerts.add(key);
 
-      const message = `
-🚨 ALERTA ${result.level} (${result.half})
+          const message = `
+🚨 ALERTA ${result.level}
 
 ⚽ ${match.teams.home.name} vs ${match.teams.away.name}
 ⏱ Minuto: ${match.fixture.status.elapsed}
 
-📊 Pressão: ${result.pressure.toFixed(1)}%
-🔥 APM: ${result.apm.toFixed(2)}
+📊 Score: ${result.score}
+📈 Pressão: ${result.pressure.toFixed(1)}%
+🔥 Ritmo: ${result.apm.toFixed(2)}
+
 🚩 Escanteios: ${result.corners}
 🎯 Chutes: ${result.shots}
-
-📈 Alta probabilidade de escanteios
 `;
 
-      await sendAlert(message);
+          await sendAlert(message);
+        }
+
+      } catch (err) {
+        console.log("Erro no jogo:", err.message);
+      }
     }
+
+  } catch (err) {
+    console.log("Erro geral:", err.message);
   }
 });
-
-console.log("Servidor rodando...");
