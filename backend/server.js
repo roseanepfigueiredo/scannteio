@@ -24,34 +24,54 @@ cron.schedule('*/1 * * * *', async () => {
 
   try {
 
-    const matches = await getLiveMatches();
+    const matches =
+      await getLiveMatches();
 
-    // 🔥 FILTRA SÓ JOGOS EM MOMENTO ÚTIL
-    const filteredMatches = matches
-      .filter(m => {
+    // 🔥 apenas jogos realmente ao vivo
+    const filteredMatches =
+      matches
+        .filter(m => {
 
-        const minute =
-          m.fixture?.status?.elapsed || 0;
+          const minute =
+            m.fixture?.status?.elapsed || 0;
 
-        return minute >= 10 &&
-               minute <= 85;
+          const status =
+            m.fixture?.status?.short;
 
-      })
-      .slice(0, 10);
+          return (
+
+            minute >= 1 &&
+
+            status !== "HT" &&
+
+            status !== "FT"
+
+          );
+
+        })
+
+        // evita erro 429
+        .slice(0, 10);
 
     console.log(
       "JOGOS FILTRADOS:",
       filteredMatches.length
     );
 
-    for (let match of filteredMatches) {
+    for (
+      let match of filteredMatches
+    ) {
 
       try {
 
         console.log(
+
           "ANALISANDO:",
+
           match.teams.home.name,
+
           match.fixture.status.elapsed
+
         );
 
         const stats =
@@ -59,56 +79,83 @@ cron.schedule('*/1 * * * *', async () => {
             match.fixture.id
           );
 
-        if (!stats || stats.length < 2) {
+        if (
+          !stats ||
+          stats.length < 2
+        ) {
+
           continue;
         }
 
-        match.statistics = stats;
+        match.statistics =
+          stats;
 
         const result =
           checkRules(match);
 
-        if (!result.triggered) {
+        if (
+          !result.triggered
+        ) {
+
           continue;
         }
 
         const key =
           `${match.fixture.id}-${result.half}`;
 
-        if (sentAlerts.has(key)) {
+        if (
+          sentAlerts.has(key)
+        ) {
+
           continue;
         }
 
-        sentAlerts.add(key);
+        sentAlerts.add(
+          key
+        );
 
         await sendAlert(`
-🚨 ${result.level}
+
+🚨 ALERTA ${result.level}
 
 ⚽ ${match.teams.home.name} x ${match.teams.away.name}
 
-📊 Score: ${result.score}
 ⏱ ${match.fixture.status.elapsed}'
 
-🔥 APM: ${result.apm.toFixed(2)}
+📊 Score: ${result.score}
+
 📈 Pressão: ${result.pressure.toFixed(1)}%
+
+🔥 APM: ${result.apm.toFixed(2)}
+
 🚩 Escanteios: ${result.corners}
+
 🎯 Chutes: ${result.shots}
+
 `);
 
-      } catch (err) {
+      }
+      catch (err) {
 
         console.log(
-          "ERRO:",
+
+          "ERRO NO JOGO:",
+
           err.message
+
         );
       }
     }
 
-  } catch (err) {
+  }
+  catch (err) {
 
     console.log(
+
       "ERRO GERAL:",
+
       err.message
+
     );
   }
 
