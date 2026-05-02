@@ -14,55 +14,29 @@ async function getLiveMatches() {
         params: {
 
           api_token:
-            process.env.API_KEY,
-
-          include:
-            'participants'
+            process.env.API_KEY
         }
       }
     );
 
-  return (
-    response.data.data
+  console.log(
+
+    "SPORTMONKS:",
+
+    JSON.stringify(
+      response.data,
+      null,
+      2
+    )
+
   );
+
+  return [];
 }
 
-async function getMatchStatistics(
-  fixtureId
-) {
+async function getMatchStatistics() {
 
-  const response =
-    await axios.get(
-
-      `${API_URL}/fixtures/${fixtureId}`,
-
-      {
-        params: {
-
-          api_token:
-            process.env.API_KEY,
-
-          include:
-            'statistics.participant'
-        }
-      }
-    );
-
-    const stats =
-      response
-        .data
-        .data
-        .statistics;
-
-    if (
-      !stats ||
-      stats.length < 2
-    ) {
-
-      return [];
-    }
-
-    return stats;
+  return [];
 }
 
 module.exports = {
