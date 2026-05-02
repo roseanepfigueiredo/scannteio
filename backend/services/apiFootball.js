@@ -8,7 +8,7 @@ async function getLiveMatches() {
   const response =
     await axios.get(
 
-      `${API_URL}/fixtures/date/${new Date().toISOString().split('T')[0]}`,
+      `${API_URL}/livescores`,
 
       {
         params: {
@@ -17,7 +17,7 @@ async function getLiveMatches() {
             process.env.API_KEY,
 
           include:
-            'participants;scores'
+            'participants'
         }
       }
     );
