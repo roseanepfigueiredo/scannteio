@@ -1,15 +1,18 @@
 function checkRules(match) {
   try {
 
-    const e = match.fixture.status.elapsed;
+    const e =
+      match.fixture.status.elapsed;
 
     if (
       !match.statistics ||
       match.statistics.length < 2 ||
       !e ||
-      e < 10
+      e < 1
     ) {
-      return { triggered: false };
+      return {
+        triggered: false
+      };
     }
 
     const h =
@@ -30,6 +33,7 @@ function checkRules(match) {
         : 0;
     };
 
+    // 📊 DADOS
     const corners =
       g(h, "Corner Kicks") +
       g(a, "Corner Kicks");
@@ -47,23 +51,71 @@ function checkRules(match) {
       g(a, "Attacks");
 
     const apm =
-      dangerous / e;
+      e > 0
+        ? dangerous / e
+        : 0;
 
     const pressure =
       attacks > 0
         ? (dangerous / attacks) * 100
         : 0;
 
+    // 🚪 REGRA BASE
+    let passedBaseRule =
+      false;
+
+    let half =
+      null;
+
+    // 🟢 1T
+    if (
+      e <= 45 &&
+      pressure >= 60 &&
+      corners >= 1 &&
+      apm >= 0.8 &&
+      shots >= 4
+    ) {
+
+      passedBaseRule =
+        true;
+
+      half = "1T";
+    }
+
+    // 🔴 2T
+    if (
+      e > 45 &&
+      pressure >= 60 &&
+      corners >= 6 &&
+      apm >= 1 &&
+      shots >= 8
+    ) {
+
+      passedBaseRule =
+        true;
+
+      half = "2T";
+    }
+
+    // ❌ não bateu sua regra
+    if (!passedBaseRule) {
+
+      return {
+        triggered: false
+      };
+    }
+
+    // 🎯 SCORE EXTRA
     let score = 0;
 
     // pressão
     if (pressure >= 70) {
       score += 40;
     }
-    else if (pressure >= 60) {
+    else if (pressure >= 65) {
       score += 30;
     }
-    else if (pressure >= 50) {
+    else {
       score += 20;
     }
 
@@ -74,7 +126,7 @@ function checkRules(match) {
     else if (apm >= 1) {
       score += 20;
     }
-    else if (apm >= 0.8) {
+    else {
       score += 15;
     }
 
@@ -82,10 +134,10 @@ function checkRules(match) {
     if (shots >= 10) {
       score += 20;
     }
-    else if (shots >= 7) {
+    else if (shots >= 8) {
       score += 15;
     }
-    else if (shots >= 5) {
+    else {
       score += 10;
     }
 
@@ -93,10 +145,10 @@ function checkRules(match) {
     if (corners >= 8) {
       score += 10;
     }
-    else if (corners >= 5) {
+    else if (corners >= 6) {
       score += 7;
     }
-    else if (corners >= 3) {
+    else {
       score += 5;
     }
 
@@ -112,34 +164,40 @@ function checkRules(match) {
       score += 5;
     }
 
-    let level = null;
+    // 📈 CLASSIFICAÇÃO
+    let level =
+      "MODERADO";
 
-    if (score >= 70) {
-      level = "FORTE";
-    }
-    else if (score >= 60) {
-      level = "MODERADO";
+    if (
+      score >= 80
+    ) {
+
+      level =
+        "FORTE";
     }
 
-    if (!level) {
-      return {
-        triggered: false
-      };
-    }
+    console.log(`
+ALERTA:
+${match.teams.home.name}
+
+MIN: ${e}
+SCORE: ${score}
+PRESSAO: ${pressure}
+APM: ${apm}
+`);
 
     return {
 
-      triggered: true,
+      triggered:
+        true,
 
-      half:
-        e <= 45
-          ? "1T"
-          : "2T",
+      half,
 
       pressure,
       apm,
       corners,
       shots,
+
       score,
       level
     };
@@ -153,7 +211,9 @@ function checkRules(match) {
     );
 
     return {
-      triggered: false
+
+      triggered:
+        false
     };
   }
 }
