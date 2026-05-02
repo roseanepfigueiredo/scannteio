@@ -1,38 +1,73 @@
 const axios = require('axios');
 
-const API_URL = 'https://v3.football.api-sports.io';
+const API_URL =
+  'https://api.sportmonks.com/v3/football';
 
 async function getLiveMatches() {
 
-  const today = new Date().toISOString().split('T')[0];
+  const response =
+    await axios.get(
 
-  const response = await axios.get(
-    `${API_URL}/fixtures?date=${today}`,
-    {
-      headers: {
-        'x-apisports-key': process.env.API_KEY
+      `${API_URL}/fixtures/date/${new Date().toISOString().split('T')[0]}`,
+
+      {
+        params: {
+
+          api_token:
+            process.env.API_KEY,
+
+          include:
+            'participants;scores'
+        }
       }
-    }
-  );
+    );
 
-  return response.data.response;
+  return (
+    response.data.data
+  );
 }
 
-async function getMatchStatistics(fixtureId) {
+async function getMatchStatistics(
+  fixtureId
+) {
 
-  const response = await axios.get(
-    `${API_URL}/fixtures/statistics?fixture=${fixtureId}`,
-    {
-      headers: {
-        'x-apisports-key': process.env.API_KEY
+  const response =
+    await axios.get(
+
+      `${API_URL}/fixtures/${fixtureId}`,
+
+      {
+        params: {
+
+          api_token:
+            process.env.API_KEY,
+
+          include:
+            'statistics.participant'
+        }
       }
-    }
-  );
+    );
 
-  return response.data.response;
+    const stats =
+      response
+        .data
+        .data
+        .statistics;
+
+    if (
+      !stats ||
+      stats.length < 2
+    ) {
+
+      return [];
+    }
+
+    return stats;
 }
 
 module.exports = {
+
   getLiveMatches,
+
   getMatchStatistics
 };
