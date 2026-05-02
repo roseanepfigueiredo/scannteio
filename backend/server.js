@@ -26,34 +26,58 @@ cron.schedule('*/1 * * * *', async () => {
 
     const matches = await getLiveMatches();
 
-    console.log("TOTAL:", matches.length);
+    // 🔥 FILTRA SÓ JOGOS EM MOMENTO ÚTIL
+    const filteredMatches = matches
+      .filter(m => {
 
-    // 🔥 LIMITA PARA 5 JOGOS
-    const selectedMatches = matches.slice(0, 5);
+        const minute =
+          m.fixture?.status?.elapsed || 0;
 
-    for (let match of selectedMatches) {
+        return minute >= 10 &&
+               minute <= 85;
+
+      })
+      .slice(0, 10);
+
+    console.log(
+      "JOGOS FILTRADOS:",
+      filteredMatches.length
+    );
+
+    for (let match of filteredMatches) {
 
       try {
 
         console.log(
           "ANALISANDO:",
-          match.teams.home.name
+          match.teams.home.name,
+          match.fixture.status.elapsed
         );
 
-        const stats = await getMatchStatistics(
-          match.fixture.id
-        );
+        const stats =
+          await getMatchStatistics(
+            match.fixture.id
+          );
+
+        if (!stats || stats.length < 2) {
+          continue;
+        }
 
         match.statistics = stats;
 
-        const result = checkRules(match);
+        const result =
+          checkRules(match);
 
-        if (!result.triggered) continue;
+        if (!result.triggered) {
+          continue;
+        }
 
         const key =
           `${match.fixture.id}-${result.half}`;
 
-        if (sentAlerts.has(key)) continue;
+        if (sentAlerts.has(key)) {
+          continue;
+        }
 
         sentAlerts.add(key);
 
@@ -74,7 +98,7 @@ cron.schedule('*/1 * * * *', async () => {
       } catch (err) {
 
         console.log(
-          "ERRO NO JOGO:",
+          "ERRO:",
           err.message
         );
       }
