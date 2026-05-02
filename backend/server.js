@@ -10,48 +10,58 @@ const sentAlerts = new Set();
 console.log("Servidor rodando...");
 
 cron.schedule('*/1 * * * *', async () => {
+
   console.log("Verificando jogos...");
 
   try {
+
     const matches = await getLiveMatches();
 
+    console.log("TOTAL DE JOGOS:", matches.length);
+
     for (let match of matches) {
+
+      console.log(
+        "JOGO ENCONTRADO:",
+        match.teams.home.name,
+        "x",
+        match.teams.away.name
+      );
+
       try {
+
         const stats = await getMatchStatistics(match.fixture.id);
+
+        console.log(
+          "ESTATISTICAS:",
+          match.teams.home.name,
+          stats.length
+        );
+
         match.statistics = stats;
 
         const result = checkRules(match);
 
         if (!result.triggered) continue;
 
-        const key = `${match.fixture.id}-${result.half}-${result.level}`;
+        const key = `${match.fixture.id}-${result.half}`;
 
         if (!sentAlerts.has(key)) {
+
           sentAlerts.add(key);
 
-          const message = `
-🚨 ALERTA ${result.level}
-
-⚽ ${match.teams.home.name} vs ${match.teams.away.name}
-⏱ Minuto: ${match.fixture.status.elapsed}
-
-📊 Score: ${result.score}
-📈 Pressão: ${result.pressure.toFixed(1)}%
-🔥 Ritmo: ${result.apm.toFixed(2)}
-
-🚩 Escanteios: ${result.corners}
-🎯 Chutes: ${result.shots}
-`;
-
-          await sendAlert(message);
+          await sendAlert(
+            `🚨 ALERTA ${match.teams.home.name} x ${match.teams.away.name}`
+          );
         }
 
       } catch (err) {
-        console.log("Erro no jogo:", err.message);
+        console.log("ERRO NO JOGO:", err.message);
       }
     }
 
   } catch (err) {
-    console.log("Erro geral:", err.message);
+    console.log("ERRO GERAL:", err.message);
   }
+
 });
